@@ -3,62 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Liquid Focus App</title>
+    <title>Liquid Focus App 2.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
         :root {
             --primary: #3b82f6;
-            --bg: #f8fafc;
-            --text: #1e293b;
+            --bg: #f3f4f6;
+            --text: #1f2937;
             --wave-color: #60a5fa;
             --danger: #ef4444;
         }
 
-        body, html {
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
             padding: 0;
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-            font-family: -apple-system, system-ui, sans-serif;
-            background-color: var(--bg);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; 
         }
 
-        /* --- STRUTTURA A PAGINE (HORIZONTAl SCROLL) --- */
-        #app-wrapper {
+        /* --- FIX SWIPE: Utilizzo di overflow-x auto con scroll snap --- */
+        #app-container {
             display: flex;
             width: 200vw;
-            height: 100vh;
+            height: 100%;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
             scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
+            -webkit-overflow-scrolling: touch; /* Per fluidità su iOS */
         }
 
         .page {
             width: 100vw;
-            height: 100vh;
+            height: 100%;
             flex-shrink: 0;
             scroll-snap-align: start;
+            position: relative;
             display: flex;
             flex-direction: column;
-            position: relative;
+            overflow-y: hidden;
         }
 
-        /* --- PAGINA 1: TIMER & TASK --- */
-        .header {
+        /* --- PAGINA 1: MAIN --- */
+        .top-section {
             background: white;
             padding: 20px;
+            padding-top: 40px;
+            padding-bottom: 40px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            z-index: 100;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             position: relative;
+            z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            flex-shrink: 0;
         }
 
-        /* Gradiente sfumato sotto il blocco timer */
-        .header::after {
+        .top-section::after {
             content: '';
             position: absolute;
             bottom: -40px;
@@ -67,443 +71,428 @@
             height: 40px;
             background: linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,0));
             pointer-events: none;
+            z-index: 5;
         }
 
         #clock {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: #94a3b8;
+            font-size: 1rem;
+            color: #9ca3af;
             margin-bottom: 10px;
+            font-weight: 600;
         }
 
-        .timer-row {
+        .timer-wrapper {
             display: flex;
             align-items: center;
             gap: 20px;
         }
 
-        /* LIQUID TIMER */
-        .liquid-container {
-            width: 130px;
-            height: 130px;
+        .timer-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
             border-radius: 50%;
             border: 4px solid var(--primary);
-            position: relative;
             overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             background: white;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
         }
 
         .wave {
             position: absolute;
             bottom: 0;
-            left: -50%;
-            width: 200%;
-            height: 50%; /* Dinamico via JS */
-            background: var(--wave-color);
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background-color: var(--wave-color);
             transition: height 0.5s ease;
+            z-index: 1;
         }
 
-        .wave::before {
+        /* Effetto originale ripristinato */
+        .wave::before, .wave::after {
             content: "";
             position: absolute;
-            width: 100%;
-            height: 100%;
-            top: -95%;
-            left: 0;
-            background: var(--bg); /* Colore sfondo per "tagliare" l'onda */
-            border-radius: 38%;
-            animation: rotate 8s linear infinite;
+            width: 200%;
+            height: 200%;
+            top: -150%; 
+            left: -50%;
+            background-color: rgba(255, 255, 255, 0.4);
+            border-radius: 40%;
+            animation: rotate 6s linear infinite;
+        }
+        .wave::after {
+            border-radius: 35%;
+            background-color: rgba(255, 255, 255, 0.2);
+            animation: rotate 10s linear infinite;
         }
 
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        .timer-display {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 2rem;
-            font-weight: 800;
+        .timer-text {
+            z-index: 2;
+            font-size: 2.2rem;
+            font-weight: bold;
             color: var(--text);
-            z-index: 10;
+            text-shadow: 0 0 5px rgba(255,255,255,0.8);
         }
 
         #play-btn {
-            width: 55px;
-            height: 55px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             border: none;
             background: var(--primary);
             color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+            font-size: 1.5rem;
             display: flex;
             justify-content: center;
             align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+            transition: transform 0.1s, background 0.3s;
         }
+        #play-btn:active { transform: scale(0.9); }
+        #play-btn.paused { background: var(--danger); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4); }
 
-        #play-btn.active { background: var(--danger); }
-
-        /* LISTA TASK */
-        .task-list {
+        #task-list-container {
             flex: 1;
             overflow-y: auto;
-            padding: 40px 20px 100px 20px;
+            padding: 20px;
+            padding-bottom: 120px;
+            padding-top: 50px;
+            -webkit-overflow-scrolling: touch;
         }
 
         .task-item {
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 10px;
             display: flex;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-            touch-action: pan-y; /* Permette scroll verticale su mobile */
+            background: white;
+            margin-bottom: 12px;
+            padding: 15px;
+            border-radius: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            /* Importante per non bloccare lo swipe laterale sulla pagina */
+            touch-action: pan-y;
         }
 
-        .handle {
-            padding: 0 10px;
-            color: #cbd5e1;
+        /* FIX VISUALIZZAZIONE DRAG MOBILE */
+        .sortable-fallback {
+            opacity: 1 !important;
+            background: white !important;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+        }
+
+        .drag-handle {
+            color: #d1d5db;
+            margin-right: 12px;
             cursor: grab;
-            font-size: 1.4rem;
-            touch-action: none; /* Fondamentale per il drag su mobile */
+            font-size: 1.5rem;
+            line-height: 0.5;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            /* touch-action none solo qui permette il drag senza scrollare la pagina */
+            touch-action: none; 
+            padding: 5px;
         }
 
         .task-checkbox {
-            width: 20px;
-            height: 20px;
-            margin-right: 15px;
+            width: 22px;
+            height: 22px;
+            margin-right: 12px;
             accent-color: var(--primary);
+            border-radius: 6px;
         }
 
-        .task-input {
+        .task-text {
             flex: 1;
             border: none;
-            font-size: 1rem;
             outline: none;
+            font-size: 1.05rem;
             background: transparent;
+            color: var(--text);
         }
 
-        .task-item.checked .task-input {
-            text-decoration: line-through;
-            opacity: 0.5;
+        .task-delete {
+            background: #fee2e2;
+            color: var(--danger);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: 10px;
+            cursor: pointer;
+            font-weight: bold;
         }
 
-        /* AGGIUNTA TASK FISSO */
-        .add-task-container {
+        #input-area {
             position: absolute;
             bottom: 0;
+            left: 0;
             width: 100%;
-            padding: 20px;
             background: white;
-            box-sizing: border-box;
+            padding: 15px 20px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
             display: flex;
-            gap: 10px;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+            z-index: 20;
         }
-
         #new-task-input {
             flex: 1;
-            padding: 12px 20px;
+            padding: 12px 15px;
+            border: 2px solid #f3f4f6;
             border-radius: 25px;
-            border: 1px solid #e2e8f0;
             outline: none;
-            background: #f1f5f9;
+            margin-right: 10px;
+            font-size: 1rem;
+            background: #f9fafb;
         }
-
-        .add-btn {
+        #add-btn {
             width: 45px;
             height: 45px;
             border-radius: 50%;
             background: var(--primary);
             color: white;
             border: none;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             cursor: pointer;
         }
 
-        /* --- PAGINA 2: TEMPLATE --- */
-        .settings-page {
-            padding: 40px 25px;
+        /* --- PAGINA 2: SETTINGS --- */
+        #settings-page {
+            background: #f9fafb;
+            padding: 30px;
             box-sizing: border-box;
-            background: #f1f5f9;
             overflow-y: auto;
         }
 
-        .card {
+        .settings-card {
             background: white;
+            border-radius: 20px;
             padding: 20px;
-            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }
 
-        h2 { margin-top: 0; font-size: 1.4rem; }
-        label { display: block; margin: 15px 0 5px 0; font-weight: 600; font-size: 0.9rem; }
-        
-        .tmpl-input, .tmpl-area {
+        .setting-input {
             width: 100%;
             padding: 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            margin-bottom: 15px;
             box-sizing: border-box;
-            font-family: inherit;
         }
 
-        .save-btn {
+        textarea.setting-input {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn-save {
             width: 100%;
+            padding: 15px;
             background: var(--primary);
             color: white;
-            padding: 15px;
             border: none;
             border-radius: 12px;
             font-weight: bold;
-            font-size: 1rem;
-            margin-top: 10px;
+            cursor: pointer;
         }
 
-        /* PAGINATION DOTS */
-        .dots {
-            position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 8px;
-            z-index: 1000;
+        .swipe-indicator {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #cbd5e1;
+            font-size: 2rem;
+            animation: pulse 2s infinite;
+            pointer-events: none;
         }
-        .dot { width: 6px; height: 6px; border-radius: 50%; background: #cbd5e1; }
-        .dot.active { background: var(--primary); width: 12px; border-radius: 4px; }
+        @keyframes pulse { 0%, 100% { opacity: 0.5; transform: translateY(-50%) translateX(0); } 50% { opacity: 1; transform: translateY(-50%) translateX(5px); } }
 
-        /* UTILITY */
-        .sortable-ghost { opacity: 0.2; }
-        .sortable-drag { background: white !important; box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; }
     </style>
 </head>
 <body>
 
-    <div class="dots">
-        <div class="dot active" id="dot1"></div>
-        <div class="dot" id="dot2"></div>
-    </div>
-
-    <div id="app-wrapper">
-        
-        <section class="page">
-            <div class="header">
-                <div id="clock">00:00</div>
-                <div class="timer-row">
-                    <div class="liquid-container">
+    <div id="app-container">
+        <section class="page" id="main-page">
+            <div class="top-section">
+                <div id="clock">12:00</div>
+                <div class="timer-wrapper">
+                    <div class="timer-container">
                         <div class="wave" id="wave-visual"></div>
-                        <div class="timer-display" id="timer-text">00:00</div>
+                        <div class="timer-text" id="timer-display">00:00</div>
                     </div>
-                    <button id="play-btn" onclick="toggleTimer()">▶</button>
+                    <button id="play-btn" onclick="toggleTimer()">
+                        <span id="play-icon">▶</span>
+                    </button>
                 </div>
+                <div class="swipe-indicator">›</div>
             </div>
-
-            <div class="task-list" id="task-list">
-                </div>
-
-            <div class="add-task-container">
-                <input type="text" id="new-task-input" placeholder="Aggiungi task rapido...">
-                <button class="add-btn" onclick="addNewTask()">+</button>
+            <div id="task-list-container"></div>
+            <div id="input-area">
+                <input type="text" id="new-task-input" placeholder="Aggiungi nuovo task...">
+                <button id="add-btn" onclick="addTask()">+</button>
             </div>
         </section>
 
-        <section class="page settings-page">
-            <div class="card">
-                <h2>Template Giornaliero</h2>
-                <p style="font-size: 0.8rem; color: #64748b;">Le impostazioni si resettano a mezzanotte.</p>
-                
-                <label>Minuti Pausa Guadagnati</label>
-                <input type="number" id="tmpl-mins" class="tmpl-input" value="15">
-
-                <label>Task del Template (uno per riga)</label>
-                <textarea id="tmpl-tasks" class="tmpl-area" rows="6" placeholder="Es: Fare colazione"></textarea>
-
-                <button class="save-btn" onclick="saveTemplate()">Salva Template</button>
+        <section class="page" id="settings-page">
+            <h2>Impostazioni Template</h2>
+            <div class="settings-card">
+                <label>Minuti di Pausa al Giorno</label>
+                <input type="number" id="template-time" class="setting-input" value="15">
+                <label>Task Ricorrenti (uno per riga)</label>
+                <textarea id="template-tasks" class="setting-input"></textarea>
+                <button class="btn-save" onclick="saveSettings()">Salva Modifiche</button>
             </div>
-            
-            <button onclick="localStorage.clear(); location.reload();" style="background:none; border:none; color:#94a3b8; width:100%; font-size:0.7rem;">Resetta tutti i dati</button>
+            <div style="text-align:center">
+                <button onclick="forceReset()" style="background:transparent; border:1px solid #ccc; padding:5px; border-radius:5px; color:#666; font-size:10px;">Debug Reset</button>
+            </div>
         </section>
-
     </div>
 
     <script>
-        let state = {
-            timeRemaining: 900,
-            maxTime: 900,
-            isPlaying: false,
-            tasks: [],
-            lastDate: null
-        };
-
+        let state = { isPlaying: false, timeRemaining: 900, maxTime: 900, tasks: [], lastDate: null };
         let timerInterval = null;
 
-        // Inizializzazione
         window.onload = () => {
             loadState();
             checkMidnightReset();
-            initSortable();
             updateClock();
             setInterval(updateClock, 1000);
-            
-            // Gestione pallini paginazione
-            const wrapper = document.getElementById('app-wrapper');
-            wrapper.addEventListener('scroll', () => {
-                const page = Math.round(wrapper.scrollLeft / window.innerWidth);
-                document.getElementById('dot1').classList.toggle('active', page === 0);
-                document.getElementById('dot2').classList.toggle('active', page === 1);
-            });
+            initSortable();
+            loadSettingsToInputs();
+            render();
         };
 
         function updateClock() {
             const now = new Date();
             document.getElementById('clock').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            if(state.lastDate && state.lastDate !== now.toDateString()) checkMidnightReset();
         }
 
-        // --- TIMER ---
         function toggleTimer() {
             state.isPlaying = !state.isPlaying;
             const btn = document.getElementById('play-btn');
-            
+            const icon = document.getElementById('play-icon');
             if (state.isPlaying) {
-                btn.innerHTML = "⏸";
-                btn.classList.add('active');
+                btn.classList.add('paused'); icon.innerText = "⏸";
                 timerInterval = setInterval(() => {
-                    if (state.timeRemaining > 0) {
-                        state.timeRemaining--;
-                        updateUI();
-                    } else {
-                        toggleTimer();
-                        alert("Pausa terminata!");
-                    }
+                    if (state.timeRemaining > 0) { state.timeRemaining--; saveState(); updateWave(); }
+                    else { toggleTimer(); alert("Tempo scaduto!"); }
                 }, 1000);
             } else {
-                btn.innerHTML = "▶";
-                btn.classList.remove('active');
-                clearInterval(timerInterval);
-                saveState();
+                btn.classList.remove('paused'); icon.innerText = "▶";
+                clearInterval(timerInterval); saveState();
             }
         }
 
-        function updateUI() {
+        function updateWave() {
             const m = Math.floor(state.timeRemaining / 60);
             const s = state.timeRemaining % 60;
-            document.getElementById('timer-text').innerText = `${m}:${s.toString().padStart(2, '0')}`;
-            
-            const perc = (state.timeRemaining / state.maxTime) * 100;
-            document.getElementById('wave-visual').style.height = `${perc}%`;
+            document.getElementById('timer-display').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            document.getElementById('wave-visual').style.height = `${(state.timeRemaining / state.maxTime) * 100}%`;
         }
 
-        // --- TASK ---
-        function renderTasks() {
-            const list = document.getElementById('task-list');
-            list.innerHTML = '';
-            state.tasks.forEach((task, index) => {
-                const item = document.createElement('div');
-                item.className = `task-item ${task.done ? 'checked' : ''}`;
-                item.setAttribute('data-id', task.id);
-                item.innerHTML = `
-                    <div class="handle">⋮⋮</div>
-                    <input type="checkbox" class="task-checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${task.id})">
-                    <input type="text" class="task-input" value="${task.text}" onchange="editTask(${task.id}, this.value)">
-                `;
-                
-                // Swipe a sinistra per eliminare
-                let startX;
-                item.addEventListener('touchstart', e => startX = e.touches[0].clientX);
-                item.addEventListener('touchend', e => {
-                    let diff = startX - e.changedTouches[0].clientX;
-                    if (diff > 100) deleteTask(task.id);
-                });
-
-                list.appendChild(item);
-            });
-        }
-
-        function addNewTask() {
-            const input = document.getElementById('new-task-input');
-            if (!input.value.trim()) return;
-            state.tasks.push({ id: Date.now(), text: input.value, done: false, isTemplate: false });
-            input.value = '';
-            saveState();
-            renderTasks();
+        function addTask(text = null, isTemplate = false) {
+            const val = text || document.getElementById('new-task-input').value;
+            if (!val.trim()) return;
+            state.tasks.push({ id: Date.now() + Math.random(), text: val, checked: false, isTemplate: isTemplate });
+            if (!text) document.getElementById('new-task-input').value = '';
+            saveState(); renderTasks();
         }
 
         function toggleTask(id) {
             const t = state.tasks.find(x => x.id === id);
-            t.done = !t.done;
-            saveState();
-            renderTasks();
+            if (t) { t.checked = !t.done; t.checked = !t.checked; saveState(); renderTasks(); }
         }
 
         function deleteTask(id) {
-            state.tasks = state.tasks.filter(x => x.id !== id);
-            saveState();
-            renderTasks();
+            if(confirm("Eliminare?")) { state.tasks = state.tasks.filter(t => t.id !== id); saveState(); renderTasks(); }
         }
 
-        // --- DRAG & DROP ---
+        function renderTasks() {
+            const container = document.getElementById('task-list-container');
+            container.innerHTML = '';
+            state.tasks.forEach(t => {
+                const el = document.createElement('div');
+                el.className = 'task-item';
+                el.setAttribute('data-id', t.id);
+                el.innerHTML = `
+                    <div class="drag-handle">⋮⋮</div>
+                    <input type="checkbox" class="task-checkbox" ${t.checked ? 'checked' : ''} onchange="toggleTask(${t.id})">
+                    <input type="text" class="task-text" value="${t.text}" readonly style="${t.checked ? 'text-decoration: line-through; opacity: 0.5' : ''}">
+                    <div class="task-delete" onclick="deleteTask(${t.id})">✕</div>`;
+                container.appendChild(el);
+            });
+        }
+
         function initSortable() {
-            Sortable.create(document.getElementById('task-list'), {
-                handle: '.handle',
+            Sortable.create(document.getElementById('task-list-container'), {
+                handle: '.drag-handle',
                 animation: 150,
-                onEnd: () => {
-                    const ids = Array.from(document.querySelectorAll('.task-item')).map(el => el.getAttribute('data-id'));
-                    state.tasks = ids.map(id => state.tasks.find(t => t.id == id));
-                    saveState();
+                forceFallback: true, // Migliora visualizzazione su mobile
+                fallbackClass: "sortable-fallback",
+                onEnd: function () {
+                    const newOrder = [];
+                    document.querySelectorAll('.task-item').forEach(item => {
+                        const id = parseFloat(item.getAttribute('data-id'));
+                        newOrder.push(state.tasks.find(t => t.id === id));
+                    });
+                    state.tasks = newOrder; saveState();
                 }
             });
         }
 
-        // --- TEMPLATE & PERSISTENZA ---
-        function saveTemplate() {
-            const mins = document.getElementById('tmpl-mins').value;
-            const tasks = document.getElementById('tmpl-tasks').value.split('\n').filter(x => x.trim());
-            localStorage.setItem('template', JSON.stringify({ mins, tasks }));
-            alert("Template salvato! Si attiverà al prossimo reset.");
+        function loadSettingsToInputs() {
+            const st = JSON.parse(localStorage.getItem('appTemplate'));
+            if (st) {
+                document.getElementById('template-time').value = st.minutes;
+                document.getElementById('template-tasks').value = st.tasks.join('\n');
+            }
+        }
+
+        function saveSettings() {
+            const mins = parseInt(document.getElementById('template-time').value) || 15;
+            const tasks = document.getElementById('template-tasks').value.split('\n').filter(t => t.trim() !== '');
+            localStorage.setItem('appTemplate', JSON.stringify({ minutes: mins, tasks: tasks }));
+            alert("Salvato!");
         }
 
         function checkMidnightReset() {
             const today = new Date().toDateString();
-            if (localStorage.getItem('lastDate') !== today) {
-                const tmpl = JSON.parse(localStorage.getItem('template'));
-                if (tmpl) {
-                    state.maxTime = tmpl.mins * 60;
-                    state.timeRemaining = state.maxTime;
-                    state.tasks = tmpl.tasks.map(t => ({ id: Math.random(), text: t, done: false, isTemplate: true }));
-                }
-                localStorage.setItem('lastDate', today);
-                saveState();
+            if (localStorage.getItem('lastResetDate') !== today) {
+                applyTemplateReset();
+                localStorage.setItem('lastResetDate', today);
+                state.lastDate = today;
             }
         }
 
-        function saveState() {
-            localStorage.setItem('appState', JSON.stringify(state));
+        function applyTemplateReset() {
+            const st = JSON.parse(localStorage.getItem('appTemplate'));
+            if (st) {
+                state.maxTime = st.minutes * 60;
+                state.timeRemaining = state.maxTime;
+                state.tasks = st.tasks.map(t => ({ id: Date.now() + Math.random(), text: t, checked: false, isTemplate: true }));
+            }
+            state.isPlaying = false; saveState(); render();
         }
 
+        function forceReset() { applyTemplateReset(); location.reload(); }
+        function saveState() { localStorage.setItem('appState', JSON.stringify(state)); }
         function loadState() {
-            const saved = localStorage.getItem('appState');
-            if (saved) {
-                state = JSON.parse(saved);
-                state.isPlaying = false;
-                // Carica i valori negli input del template per comodità
-                const tmpl = JSON.parse(localStorage.getItem('template'));
-                if(tmpl) {
-                    document.getElementById('tmpl-mins').value = tmpl.mins;
-                    document.getElementById('tmpl-tasks').value = tmpl.tasks.join('\n');
-                }
-                updateUI();
-                renderTasks();
-            }
+            const s = JSON.parse(localStorage.getItem('appState'));
+            if (s) { state = s; state.isPlaying = false; updateWave(); renderTasks(); }
+            state.lastDate = localStorage.getItem('lastResetDate');
         }
+        function render() { updateWave(); renderTasks(); }
     </script>
 </body>
 </html>
